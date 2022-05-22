@@ -1,17 +1,17 @@
 #!/bin/sh
 
-IP1=`curl ifconfig.co --interface pppoe-wan`
-#echo $IP1
-
-. /lib/functions/network.sh
-#network_find_wan NET_IF
-network_get_ipaddr NET_ADDR wan
-#echo "${NET_ADDR}"
-
-if [ $IP1 != ${NET_ADDR} ]
+if [[ "$ACTION" != "ifup" || "$INTERFACE" != "wan" ]]
 then
-        echo Reconnecting wan - grey IP detected: $IP1 - ${NET_ADDR}
+        exit
+fi
+
+. /lib/functions/network.sh; network_get_ipaddr ip wan
+ip2=`curl ifconfig.co --interface pppoe-wan`
+
+if [ $ip != $ip2 ]
+then
+        logger -t grey_ip "Reconnecting wan - grey IP detected: $ip"
         ifup wan
 else
-        echo Yeah! White IP detected: ${NET_ADDR}
+        logger -t grey_ip "Yeah! White IP detected: $ip"
 fi
