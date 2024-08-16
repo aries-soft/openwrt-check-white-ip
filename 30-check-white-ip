@@ -1,17 +1,21 @@
 #!/bin/sh
 
-if [[ "$ACTION" != "ifup" || "$INTERFACE" != "wan" ]]
-then
-        exit
-fi
+IP4=`curl -4 ifconfig.co --interface pppoe-wan`
+IP6=`curl ifconfig.co --interface pppoe-wan`
+#echo $IP4
 
-. /lib/functions/network.sh; network_get_ipaddr ip wan
-ip2=`curl ifconfig.co --interface pppoe-wan`
+. /lib/functions/network.sh
+#network_find_wan NET_IF
+network_get_ipaddr NET_ADDR wan
+#echo "${NET_ADDR}"
 
-if [ $ip != $ip2 ]
+if [ $IP4 != ${NET_ADDR} ]
 then
-        logger -t grey_ip "Reconnecting wan - grey IP detected: $ip"
+        echo Reconnecting wan - grey IP detected: $IP4 - ${NET_ADDR}
         ifup wan
 else
-        logger -t grey_ip "Yeah! White IP detected: $ip"
+        echo Yeah! White IP detected: ${NET_ADDR}
+        curl -4 -k https://ydns.io/hosts/update/_token_ 
+        echo -e "\n"
+        curl -k "https://www.duckdns.org/update?domains=_domens_&ip=$IP4&ipv6=$IP6&token=_token_
 fi
